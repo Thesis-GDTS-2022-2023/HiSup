@@ -1,0 +1,42 @@
+SOLVER:
+  IMS_PER_BATCH: 2
+  BASE_LR: 1e-4
+  MAX_EPOCH: 30
+  STEPS: (25,)
+  WEIGHT_DECAY: 0.0001
+  CHECKPOINT_PERIOD: 1
+  OPTIMIZER: "ADAM"
+  AMSGRAD: True
+
+DATALOADER:
+  NUM_WORKERS: 8
+
+DATASETS:
+  IMAGE:
+    PIXEL_MEAN: [84.87777125, 85.91388346, 81.99834131]
+    PIXEL_STD: [49.23361801, 45.10192952, 42.64557398]
+    TO_255: True
+    HEIGHT: 512
+    WIDTH: 512
+  TARGET:
+    HEIGHT: 128
+    WIDTH: 128
+  ORIGIN:
+    HEIGHT: 256
+    WIDTH: 256
+  TRAIN: ("vietnam_osm_train",)
+  VAL: ("vietnam_osm_val",)
+  TEST: ("vietnam_osm_test",)
+
+MODEL:
+  NAME: "HRNet48v2"
+  HEAD_SIZE: [[2]]
+  OUT_FEATURE_CHANNELS: 256
+  LOSS_WEIGHTS:
+    loss_joff: 0.25    # joff  regression
+    loss_jloc: 8.0     # jloc  classification
+    loss_mask: 1.0
+    loss_afm : 0.1
+    loss_remask : 1.0
+
+OUTPUT_DIR: "./outputs/osmvn_hrnet48"

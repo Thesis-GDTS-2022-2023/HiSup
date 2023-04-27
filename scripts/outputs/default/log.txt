@@ -1,0 +1,18 @@
+2023-04-07 14:04:27,473 testing INFO: Namespace(config_file=None, eval_type='coco_iou', opts=[])
+2023-04-07 14:04:27,473 testing INFO: Loaded the default configuration for testing
+2023-04-07 14:04:36,893 testing INFO: Testing on crowdai_demo dataset
+2023-04-07 14:35:19,640 testing INFO: Namespace(config_file=None, eval_type='coco_iou', opts=[])
+2023-04-07 14:35:19,640 testing INFO: Loaded the default configuration for testing
+2023-04-07 14:35:27,652 testing INFO: Testing on crowdai_demo dataset
+2023-04-07 14:35:42,691 testing INFO: Namespace(config_file=None, eval_type='coco_iou', opts=[])
+2023-04-07 14:35:42,692 testing INFO: Loaded the default configuration for testing
+2023-04-07 14:35:50,315 testing INFO: Testing on crowdai_demo dataset
+2023-04-07 14:46:07,809 testing INFO: Namespace(config_file=None, eval_type='coco_iou', opts=[])
+2023-04-07 14:46:07,809 testing INFO: Loaded the default configuration for testing
+2023-04-07 14:46:16,595 testing INFO: Testing on crowdai_demo dataset
+2023-04-08 18:15:55,488 testing INFO: Namespace(config_file=None, eval_type='coco_iou', opts=[])
+2023-04-08 18:15:55,489 testing INFO: Loaded the default configuration for testing
+2023-04-08 18:16:04,383 testing INFO: Testing on crowdai_demo dataset
+2023-04-08 18:24:03,417 testing INFO: Namespace(config_file=None, eval_type='coco_iou', opts=[])
+2023-04-08 18:24:03,418 testing INFO: Loaded the default configuration for testing
+2023-04-08 18:24:11,024 testing INFO: Testing on crowdai_demo dataset

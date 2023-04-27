@@ -3,9 +3,9 @@ from yacs.config import CfgNode as CN
 # Dataset options
 # ---------------------------------------------------------------------------- #
 DATASETS = CN()
-DATASETS.TRAIN = ("crowdai_train",)
-DATASETS.VAL   = ("crowdai_train_small",)
-DATASETS.TEST  = ("crowdai_test_small",)
+DATASETS.TRAIN = ("osm_train",)
+DATASETS.VAL   = ("osm_val",)
+DATASETS.TEST  = ("osm_test",)
 DATASETS.ROTATE_F = False
 DATASETS.IMAGE = CN()
 DATASETS.IMAGE.HEIGHT = 512

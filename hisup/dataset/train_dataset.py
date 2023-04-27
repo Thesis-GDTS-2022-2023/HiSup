@@ -1,13 +1,15 @@
 import cv2
 import random
 import os.path as osp
-import numpy as np
 
+from PIL import Image
+import numpy as np
 from skimage import io
+from torch.utils.data.dataloader import default_collate
 from pycocotools.coco import COCO
 from shapely.geometry import Polygon
 from torch.utils.data import Dataset
-from torch.utils.data.dataloader import default_collate
+import pandas as pd
 
 
 def affine_transform(pt, t):
@@ -15,29 +17,39 @@ def affine_transform(pt, t):
     new_pt = np.dot(t, new_pt)
     return new_pt[:2]
 
-class TrainDataset(Dataset):
-    def __init__(self, root, ann_file, transform=None, rotate_f=None):
-        self.root = root
 
-        self.coco = COCO(ann_file)
-        images_id = self.coco.getImgIds()
-        self.images=images_id.copy()
-        self.num_samples = len(self.images)
+class TrainDataset(Dataset):
+    def __init__(self, root_a, ann_file_a,root_b, ann_file_b, csv_file, transform=None, rotate_f=None):
+        self.root_a = root_a
+        self.root_b = root_b
+
+        self.coco_a = COCO(ann_file_a)
+        images_id_a = self.coco_a.getImgIds()
+        self.images_a=images_id_a.copy()
+
+        self.coco_b = COCO(ann_file_b)
+        images_id_b = self.coco_b.getImgIds()
+        self.images_b=images_id_b.copy()
+
+        self.num_samples = len(self.images_a)
 
         self.transform = transform
         self.rotate_f = rotate_f
 
-    def __getitem__(self, idx_):
+        self.pairs = pd.read_csv(csv_file)
+
+
+    def get_single(self,idx_,images,coco:COCO,root):
         # basic information
-        img_id = self.images[idx_]
-        img_info = self.coco.loadImgs(ids=[img_id])[0]
+        img_id = images[idx_]
+        img_info = coco.loadImgs(ids=[img_id])[0]
         file_name = img_info['file_name']
         width = img_info['width']
         height = img_info['height']
 
         # load annotations
-        ann_ids = self.coco.getAnnIds(imgIds=[img_id])
-        ann_coco = self.coco.loadAnns(ids=ann_ids)
+        ann_ids = coco.getAnnIds(imgIds=[img_id])
+        ann_coco = coco.loadAnns(ids=ann_ids)
         
         ann = {
             'junctions': [],
@@ -63,6 +75,10 @@ class TrainDataset(Dataset):
                 junc_tags = np.ones(points.shape[0])
                 if i == 0:  # outline
                     poly = Polygon(points)
+                    # print("Number of points in the polygon:", len(points))
+                    # print("Polygon:", points)
+                    # print("Segmentation:", segm)
+                    # print("=============================")
                     if poly.area > 0:
                         convex_point = np.array(poly.convex_hull.exterior.coords)
                         convex_index = [(p == convex_point).all(1).any() for p in points]
@@ -70,7 +86,7 @@ class TrainDataset(Dataset):
                         junc_tags[convex_index] = 2    # convex point label
                         tags.extend(junc_tags.tolist())
                         ann['bbox'].append(list(poly.bounds))
-                        seg_mask += self.coco.annToMask(ann_per_ins)
+                        seg_mask += coco.annToMask(ann_per_ins)
                 else:
                     juncs.extend(points.tolist())
                     tags.extend(junc_tags.tolist())
@@ -91,7 +107,7 @@ class TrainDataset(Dataset):
         seg_mask = np.clip(seg_mask, 0, 1)
 
         # load image
-        image = io.imread(osp.join(self.root, file_name)).astype(float)[:, :, :3]
+        image = io.imread(osp.join(root, file_name)).astype(float)[:, :, :3]
         for key, _type in (['junctions', np.float32],
                            ['edges_positive', np.long],
                            ['juncs_tag', np.long],
@@ -157,7 +173,15 @@ class TrainDataset(Dataset):
 
         if self.transform is not None:
             return self.transform(image, ann)
+        
         return image, ann
+
+
+    def __getitem__(self, idx_):
+        image_tar, annotation_tar = self.get_single(self.pairs['target'][idx_],self.images_a,self.coco_a,self.root_a)
+        image_aux, annotation_aux = self.get_single(self.pairs['auxiliary'][idx_],self.images_b,self.coco_b,self.root_b)
+        return (image_tar, image_aux), (annotation_tar, annotation_aux)
+
 
     def __len__(self):
         return self.num_samples

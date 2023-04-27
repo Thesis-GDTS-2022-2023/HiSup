@@ -1,4 +1,7 @@
 import argparse
+import os
+import sys
+sys.path.append("..")
 
 from multiprocess import Pool
 from pycocotools.coco import COCO

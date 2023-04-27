@@ -1,0 +1,6 @@
+setup.py
+./vision.cpp
+afm_op.egg-info/PKG-INFO
+afm_op.egg-info/SOURCES.txt
+afm_op.egg-info/dependency_links.txt
+afm_op.egg-info/top_level.txt

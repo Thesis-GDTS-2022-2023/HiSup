@@ -1,6 +1,8 @@
 import os
 import argparse
 import logging
+import sys
+sys.path.append("..")
 
 from hisup.config import cfg
 from hisup.detector import BuildingDetector

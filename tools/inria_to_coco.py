@@ -291,9 +291,9 @@ def affine_transform(pt, t):
 
 
 if __name__ == '__main__':
-    input_image_path = './data/inria/raw/train/images/'
-    input_gt_path = './data/inria/raw/train/gt/'
-    save_path = './data/inria/train/'
+    input_image_path = '../data/inria/raw/train/images/'
+    input_gt_path = '../data/inria/raw/train/gt/'
+    save_path = '../data/inria/train/'
 
     cities = ['austin', 'chicago', 'kitsap', 'tyrol-w', 'vienna']
     val_set = [str(i) for i in range(1, 6)]

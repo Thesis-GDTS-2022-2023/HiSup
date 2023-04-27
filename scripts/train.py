@@ -1,3 +1,7 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+del sys, os
+
 import os
 import time
 import argparse
@@ -8,8 +12,8 @@ import datetime
 
 from hisup.config import cfg
 from hisup.detector import BuildingDetector
-from hisup.dataset import build_train_dataset
-from hisup.utils.comm import to_single_device
+from hisup.dataset.build import build_train_dataset
+from hisup.utils.comm import to_device
 from hisup.solver import make_lr_scheduler, make_optimizer
 from hisup.utils.logger import setup_logger
 from hisup.utils.miscellaneous import save_config
@@ -53,6 +57,10 @@ def parse_args():
                         nargs=argparse.REMAINDER
                         )
 
+    parser.add_argument("--pretrain",
+                        default=True,
+                        type=bool)
+
     args = parser.parse_args()
     
     return args
@@ -76,14 +84,19 @@ def train(cfg):
     model = model.to(device)
 
     train_dataset = build_train_dataset(cfg)
-    
+
     optimizer = make_optimizer(cfg,model)
     scheduler = make_lr_scheduler(cfg,optimizer)
-    
+
     loss_reducer = LossReducer(cfg)
     
     arguments = {}
-    arguments["epoch"] = 0
+    try:
+        with open(os.path.join(cfg.OUTPUT_DIR,"last_checkpoint")) as f:
+            last_checkpoint = f.readline()
+            arguments["epoch"] = int(last_checkpoint[-9:-4])
+    except:
+        arguments["epoch"] = 0
     max_epoch = cfg.SOLVER.MAX_EPOCH
     arguments["max_epoch"] = max_epoch
 
@@ -93,6 +106,10 @@ def train(cfg):
                                         save_dir=cfg.OUTPUT_DIR,
                                         save_to_disk=True,
                                         logger=logger)
+    try:
+        checkpointer.load(open(last_checkpoint))
+    except:
+        pass
 
     start_training_time = time.time()
     end = time.time()
@@ -102,17 +119,25 @@ def train(cfg):
 
     global_iteration = epoch_size*start_epoch
 
+    # print("Training from epoch {}.....".format(start_epoch+1))
     for epoch in range(start_epoch+1, arguments['max_epoch']+1):
         meters = MetricLogger(" ")
         model.train()
         arguments['epoch'] = epoch
 
         for it, (images, annotations) in enumerate(train_dataset):
+            # print(len(images), len(annotations[0]))
+            images_a, images_b = images
+            annotations_a, annotations_b = [ann[0] for ann in annotations], [ann[1] for ann in annotations]
+            # print(type(annotations))#['junctions']))
             data_time = time.time() - end
-            images = images.to(device)
-            annotations = to_single_device(annotations,device)
-            
-            loss_dict, _ = model(images,annotations)
+            images_a = images_a.to(device)
+            annotations_a = to_device(annotations_a,device)
+            images_b = images_b.to(device)
+            annotations_b = to_device(annotations_b,device)
+
+            # print(type(images_a),type(images_b),annotations_a.keys(),annotations_b.keys())
+            loss_dict, _ = model(images_a,images_b,annotations_a,annotations_b)
             total_loss = loss_reducer(loss_dict)
 
             with torch.no_grad():
@@ -177,10 +202,11 @@ if __name__ == "__main__":
         if os.path.isdir(output_dir) and args.clean:
             import shutil
             shutil.rmtree(output_dir)
-        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)        
 
     logger = setup_logger('training', output_dir, out_file='train.log')
     logger.info(args)
+    logger.info(cfg)
     logger.info("Loaded configuration file {}".format(args.config_file))
 
     with open(args.config_file,"r") as cf:

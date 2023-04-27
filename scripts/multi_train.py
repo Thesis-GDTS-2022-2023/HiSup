@@ -8,7 +8,7 @@ import argparse
 import logging
 import torch.nn as nn
 
-from hisup.detector import BuildingDetector
+from hisup.detector_ import BuildingDetector
 from hisup.config import cfg
 from hisup.utils.comm import to_device
 from hisup.dataset import build_train_dataset_multi
@@ -18,7 +18,7 @@ from hisup.utils.metric_logger import MetricLogger
 from hisup.utils.miscellaneous import save_config
 from hisup.utils.checkpoint import DetectronCheckpointer
 from torch.utils.data.distributed import DistributedSampler
-from hisup.dataset.train_dataset import collate_fn
+from hisup.dataset.train_dataset_ import collate_fn
 
 torch.distributed.init_process_group(backend="nccl")
 local_rank = torch.distributed.get_rank()

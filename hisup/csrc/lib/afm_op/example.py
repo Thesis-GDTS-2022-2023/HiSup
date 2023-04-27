@@ -1,5 +1,5 @@
 import torch
-import afmop
+# import afmop
 
 import os
 import os.path as osp
@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import cv2
 import scipy.io as sio
 from tqdm import tqdm
-from lib.afm.gpu_afm import afm_transform_gpu as afm_transform
+# from lib.afm.gpu_afm import afm_transform_gpu as afm_transform
 
 data_root = '../data/wireframe_raw'
 output_root = '../data/wireframe'
