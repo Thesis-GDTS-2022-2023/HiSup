@@ -7,18 +7,35 @@ from PIL import Image
 from pycocotools.coco import COCO
 from shapely.geometry import Polygon
 from torch.utils.data.dataloader import default_collate
+import pandas as pd
+
+
 
 class TestDatasetWithAnnotations(dset.coco.CocoDetection):
-    def __init__(self, root, ann_file, transform = None):
-        super(TestDatasetWithAnnotations, self).__init__(root, ann_file)
+    def __init__(self, root_a, ann_file_a,root_b, ann_file_b, csv_file, transform = None):
+        super(TestDatasetWithAnnotations, self).__init__(root_a, ann_file_a,root_b, ann_file_b, csv_file)
 
-        self.root = root
+        self.root_a = root_a
+        self.root_b = root_b
+
         self.ids = sorted(self.ids)
         self.id_to_img_map = {k:v for k, v in enumerate(self.ids)}
         self._transforms = transform
+
+        self.pairs = pd.read_csv(csv_file)
+
     
     def __getitem__(self, idx):
-        img, annos = super(TestDatasetWithAnnotations, self).__getitem__(idx)
+        img_tar, ann_tar = super(TestDatasetWithAnnotations, self).__getitem__(self.pairs['target'][idx])
+        img_aux, ann_aux = super(TestDatasetWithAnnotations, self).__getitem__(self.pairs['auxiliary'][idx])
+
+        image_tar, annotation_tar = self.load_single(img_tar, ann_tar)
+        image_aux, annotation_aux = self.load_single(img_aux, ann_aux)
+
+        return image_tar,annotation_tar,image_aux, annotation_aux
+        
+    
+    def load_single(self,idx,img,annos):
         image = np.array(img).astype(float)
         img_info = self.get_img_info(idx)
         width, height = img_info['width'], img_info['height']

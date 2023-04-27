@@ -119,22 +119,12 @@ def reduce_dict(input_dict, average=True):
 def to_device(data,device):
     if isinstance(data,torch.Tensor):
         return data.to(device)
-    if isinstance(data, dict):
-#         import pdb; pdb.set_trace()
+    elif isinstance(data, dict):
         for key in data:
             if isinstance(data[key],torch.Tensor):
                 data[key] = data[key].to(device)
         return data
-    if isinstance(data,list):
+    elif isinstance(data,list):
         return [to_device(d,device) for d in data]
-
-def to_single_device(data, device):
-    if isinstance(data, torch.Tensor):
-        return data.to(device)
-    if isinstance(data, dict):
-        for key in data:
-            if isinstance(data[key], torch.Tensor):
-                data[key] = data[key].to(device)
-        return data
-    if isinstance(data, list):
-        return [to_device(d, device) for d in data]
+    elif isinstance(data,tuple):
+        return tuple([to_device(d,device) for d in data])

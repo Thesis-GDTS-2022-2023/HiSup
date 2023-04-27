@@ -1,6 +1,6 @@
 import torch
 
-from hisup.csrc.lib.afm_op import afm
+from afm_op import afm
 from torch.utils.data.dataloader import default_collate
 
 class Encoder(object):

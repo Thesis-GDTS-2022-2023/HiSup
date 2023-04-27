@@ -3,7 +3,7 @@ import torch.nn as nn
 class MultitaskHead(nn.Module):
     def __init__(self, input_channels, num_class, head_size):
         super(MultitaskHead, self).__init__()
-
+        # print(input_channels,num_class,head_size)
         m = int(input_channels / 4)
         heads = []
         for output_channels in sum(head_size, []):

@@ -448,6 +448,7 @@ class HighResolutionNet(nn.Module):
         return nn.Sequential(*modules), num_inchannels
 
     def forward(self, x):
+        # print ("input size:", x.shape)
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -486,6 +487,8 @@ class HighResolutionNet(nn.Module):
                 x_list.append(y_list[i])
         x = self.stage4(x_list)
 
+        # print(len(x), len(x[0]), len(x[0][0]), len(x[0][0][0]))
+
         # Upsampling
         x0_h, x0_w = x[0].size(2), x[0].size(3)
         x1 = F.interpolate(x[1], size=(x0_h, x0_w), mode='bilinear', align_corners=ALIGN_CORNERS)
@@ -497,6 +500,8 @@ class HighResolutionNet(nn.Module):
         x = self.last_layer(x)
         out = self.head(x)
 
+        # print (out.shape)
+        # print (x.shape)
         return out, x
 
     def init_weights(self, pretrained='',):

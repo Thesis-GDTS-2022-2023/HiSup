@@ -14,6 +14,9 @@ def setup_logger(name, save_dir, out_file='log.txt'):
     logger.addHandler(ch)
 
     if save_dir:
+        # print(save_dir)
+        # print("--------------------------------")
+        # print(out_file)
         fh = logging.FileHandler(os.path.join(save_dir, out_file))
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
