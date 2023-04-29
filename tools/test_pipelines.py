@@ -1,3 +1,7 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+del sys, os
+
 import os
 import os.path as osp
 import json
@@ -11,7 +15,7 @@ from PIL import Image
 from tqdm import tqdm
 from skimage import io
 from tools.evaluation import coco_eval, boundary_eval, polis_eval
-from hisup.utils.comm import to_single_device
+from hisup.utils.comm import to_device
 from hisup.utils.polygon import generate_polygon
 from hisup.utils.visualizer import viz_inria
 from hisup.dataset.build import build_test_dataset
@@ -84,7 +88,7 @@ class TestPipeline():
         self.cfg = cfg
         self.device = cfg.MODEL.DEVICE
         self.output_dir = cfg.OUTPUT_DIR
-        self.dataset_name = cfg.DATASETS.TEST[2]
+        self.dataset_name = cfg.DATASETS.TEST[0]
         self.eval_type = eval_type
         
     
@@ -106,22 +110,22 @@ class TestPipeline():
         batch_masks = output['mask_pred']
 
         for b in range(batch_size):
-                filename = anns[b]['filename']
-                
-                img_id = int(filename[:-4])
+            filename = anns[b]['filename']
 
-                scores = batch_scores[b]
-                polys = batch_polygons[b]
-                mask_pred = batch_masks[b]
-                # print(mask_pred.shape)
+            img_id = int(filename[:-4])
 
-                image_result = generate_coco_ann(polys, scores, img_id)
-                if len(image_result) != 0:
-                    res.extend(image_result)
+            scores = batch_scores[b]
+            polys = batch_polygons[b]
+            mask_pred = batch_masks[b]
+            # print(mask_pred.shape)
 
-                image_masks = generate_coco_mask(mask_pred, img_id)
-                if len(image_masks) != 0:
-                    mask_res.extend(image_masks)
+            image_result = generate_coco_ann(polys, scores, img_id)
+            if len(image_result) != 0:
+                res.extend(image_result)
+
+            image_masks = generate_coco_mask(mask_pred, img_id)
+            if len(image_masks) != 0:
+                mask_res.extend(image_masks)
 
     def test_log(self,res,logger,gt_file,type='non-mask',test_set='target'):
         dt_file = osp.join(self.output_dir,'{}_{}_mask.json'.format(test_set,self.dataset_name)) if type == 'mask' else\
@@ -148,8 +152,8 @@ class TestPipeline():
         for i, (imgs_tar, anns_tar,imgs_aux,anns_aux) in enumerate(tqdm(test_dataset)):
             
             with torch.no_grad():
-                output, _ = model(imgs_tar.to(self.device), imgs_aux.to(self.device),to_single_device(anns_tar, self.device),to_single_device(anns_aux, self.device))
-                output = to_single_device(output,'cpu')
+                output, _ = model(imgs_tar.to(self.device), imgs_aux.to(self.device),to_device(anns_tar, self.device),to_device(anns_aux, self.device))
+                output = to_device(output,'cpu')
 
     
             self.test_batch(imgs_tar,output,anns_tar,tar_results,tar_mask_results)

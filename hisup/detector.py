@@ -9,7 +9,7 @@ from hisup.utils.polygon import generate_polygon
 from hisup.utils.polygon import get_pred_junctions
 from skimage.measure import label, regionprops
 
-from hisup.cross.cam import CrossGeoBlock
+from hisup.cross.cgb import CrossGeoBlock
 
 
 def cross_entropy_loss_for_junction(logits, positive):
