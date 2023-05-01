@@ -13,7 +13,7 @@ import datetime
 from hisup.config import cfg
 from hisup.detector_ import BuildingDetector
 from hisup.dataset import build_train_dataset
-from hisup.utils.comm import to_single_device
+from hisup.utils.comm import to_device
 from hisup.solver import make_lr_scheduler, make_optimizer
 from hisup.utils.logger import setup_logger
 from hisup.utils.miscellaneous import save_config
@@ -132,7 +132,7 @@ def train(cfg):
         for it, (images, annotations) in enumerate(train_dataset):
             data_time = time.time() - end
             images = images.to(device)
-            annotations = to_single_device(annotations,device)
+            annotations = to_device(annotations,device)
 
             
             loss_dict, _ = model(images,annotations)

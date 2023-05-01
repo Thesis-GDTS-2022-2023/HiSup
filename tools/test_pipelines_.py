@@ -12,7 +12,7 @@ from PIL import Image
 from tqdm import tqdm
 from skimage import io
 from tools.evaluation import coco_eval, boundary_eval, polis_eval
-from hisup.utils.comm import to_single_device
+from hisup.utils.comm import to_device
 from hisup.utils.polygon import generate_polygon
 from hisup.utils.visualizer import viz_inria
 from hisup.dataset import build_test_dataset
@@ -85,8 +85,7 @@ class TestPipeline():
         self.cfg = cfg
         self.device = cfg.MODEL.DEVICE
         self.output_dir = cfg.OUTPUT_DIR
-        # self.dataset_name = cfg.DATASETS.TEST[1]
-        self.dataset_name = cfg.DATASETS.TEST[2]
+        self.dataset_name = cfg.DATASETS.TEST[0]
         self.count = 0
         self.eval_type = eval_type
         
@@ -119,8 +118,8 @@ class TestPipeline():
         for i, (images, annotations) in enumerate(tqdm(test_dataset)):
             
             with torch.no_grad():
-                output, _ = model(images.to(self.device), to_single_device(annotations, self.device))
-                output = to_single_device(output,'cpu')
+                output, _ = model(images.to(self.device), to_device(annotations, self.device))
+                output = to_device(output,'cpu')
 
             batch_size = images.size(0)
             batch_scores = output['scores']
@@ -228,7 +227,7 @@ class TestPipeline():
 
                     with torch.no_grad():
                         output, _ = model(crop_img_tensor, [meta])
-                        output = to_single_device(output, 'cpu')
+                        output = to_device(output, 'cpu')
                     print("------------------",type(output))
                     juncs_pred = output['juncs_pred'][0]
                     # print(juncs_pred.shape)
