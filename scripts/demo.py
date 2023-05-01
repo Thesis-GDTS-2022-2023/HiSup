@@ -6,7 +6,7 @@ from skimage import io
 from hisup.config import cfg
 from hisup.detector_ import get_pretrained_model
 from hisup.dataset.build_ import build_transform
-from hisup.utils.comm import to_single_device
+from hisup.utils.comm import to_device
 from hisup.utils.visualizer import show_polygons
 
 
@@ -39,7 +39,7 @@ def inference_no_patching(cfg, model, image, device):
 
     with torch.no_grad():
         output, _ = model(image_tensor, [meta])
-        output = to_single_device(output, 'cpu')
+        output = to_device(output, 'cpu')
 
     if len(output['polys_pred']) > 0:
         polygons = output['polys_pred'][0]
@@ -95,7 +95,7 @@ def inference_with_patching(cfg, model, image, device):
 
             with torch.no_grad():
                 output, _ = model(crop_img_tensor, [meta])
-                output = to_single_device(output, 'cpu')
+                output = to_device(output, 'cpu')
 
             juncs_pred = output['juncs_pred'][0]
             mask_pred = output['mask_pred'][0]

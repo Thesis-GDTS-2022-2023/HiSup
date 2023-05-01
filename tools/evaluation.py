@@ -25,7 +25,7 @@ def coco_eval(annFile, resFile):
 
     cocoEval = COCOeval(cocoGt, cocoDt, annType[type])
     cocoEval.params.imgIds = imgIds
-    cocoEval.params.catIds = [100]
+    # cocoEval.params.catIds = [100]
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
