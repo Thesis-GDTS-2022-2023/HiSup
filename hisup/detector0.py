@@ -118,6 +118,7 @@ class BuildingDetector(nn.Module):
         outputs_a, features_a = self.backbone(image_a) # extract Fb
         outputs_b, features_b = self.backbone(image_b)
 
+        print(features_a.shape, features_b.shape)
         en_features_a = self.cross(features_a,features_b)
         en_features_b = self.cross(features_b,features_a)
 

@@ -9,6 +9,8 @@ from hisup.utils.polygon import generate_polygon
 from hisup.utils.polygon import get_pred_junctions
 from skimage.measure import label, regionprops
 
+from hisup.attention.fca import MultiSpectralAttentionLayer as FCA
+
 
 def cross_entropy_loss_for_junction(logits, positive):
     nlogp = -F.log_softmax(logits, dim=1)
@@ -84,8 +86,8 @@ class BuildingDetector(nn.Module):
         self.jloc_head = self._make_conv(dim_in, dim_in, dim_in)
         self.afm_head = self._make_conv(dim_in, dim_in, dim_in)
 
-        self.a2m_att = ECA(dim_in)
-        self.a2j_att = ECA(dim_in)
+        self.a2m_att = FCA(dim_in)
+        self.a2j_att = FCA(dim_in)
 
         self.mask_predictor = self._make_predictor(dim_in, 2)
         self.jloc_predictor = self._make_predictor(dim_in, 3)

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision.models import ResNet
+import math
 
 def get_freq_indices(method):
     assert method in ['top1','top2','top4','top8','top16','top32',
@@ -67,7 +68,7 @@ class MultiSpectralDCTLayer(nn.Module):
             return result
         else:
             return result * math.sqrt(2)
-    
+
     def get_dct_filter(self, tile_size_x, tile_size_y, mapper_x, mapper_y, channel):
         dct_filter = torch.zeros(channel, tile_size_x, tile_size_y)
 
@@ -77,12 +78,12 @@ class MultiSpectralDCTLayer(nn.Module):
             for t_x in range(tile_size_x):
                 for t_y in range(tile_size_y):
                     dct_filter[i * c_part: (i+1)*c_part, t_x, t_y] = self.build_filter(t_x, u_x, tile_size_x) * self.build_filter(t_y, v_y, tile_size_y)
-                        
+           
         return dct_filter
 
 
 class MultiSpectralAttentionLayer(torch.nn.Module):
-    def __init__(self, channel, dct_h, dct_w, reduction = 16, freq_sel_method = 'top16'):
+    def __init__(self, channel, dct_h=128, dct_w=128, reduction = 16, freq_sel_method = 'top16'):
         super(MultiSpectralAttentionLayer, self).__init__()
         self.reduction = reduction
         self.dct_h = dct_h
@@ -103,7 +104,14 @@ class MultiSpectralAttentionLayer(torch.nn.Module):
             nn.Sigmoid()
         )
 
-    def forward(self, x):
+        self.out_conv = nn.Sequential(
+            nn.Conv2d(channel, channel, kernel_size=1, padding=0, bias=False),
+            nn.BatchNorm2d(channel),
+            nn.ReLU(inplace=True)
+        )
+
+    def forward(self, x1,x2):
+        x = x1 + x2
         n,c,h,w = x.shape
         x_pooled = x
         if h != self.dct_h or w != self.dct_w:
@@ -112,8 +120,7 @@ class MultiSpectralAttentionLayer(torch.nn.Module):
             # In the ImageNet models, this line will never be triggered. 
             # This is for compatibility in instance segmentation and object detection.
         y = self.dct_layer(x_pooled)
-
         y = self.fc(y).view(n, c, 1, 1)
-        return x * y.expand_as(x)
 
-
+        out = self.out_conv(x2 * y.expand_as(x2))
+        return out

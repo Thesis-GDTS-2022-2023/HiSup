@@ -72,5 +72,3 @@ class CAM(nn.Module):
         f2 = f2.view(b, n1, n2, c, h, w)
 
         return f1.transpose(1, 2), f2.transpose(1, 2)
-
-CrossGeoBlock = CAM

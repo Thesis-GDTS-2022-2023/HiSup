@@ -1,3 +1,7 @@
+import sys
+sys.path.append("/home/ubuntu/Documents/models/afm_cvpr2019/lib/")
+del sys
+
 import torch
 
 from afm_op import afm

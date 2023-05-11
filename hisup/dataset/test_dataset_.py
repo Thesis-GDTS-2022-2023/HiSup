@@ -24,6 +24,7 @@ class TestDatasetWithAnnotations(dset.coco.CocoDetection):
         width, height = img_info['width'], img_info['height']
 
         ann = {
+            'id': img_info['id'],
             'filename': img_info['file_name'],
             'width': width,
             'height': height,
