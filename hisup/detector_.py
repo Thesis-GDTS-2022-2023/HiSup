@@ -86,8 +86,8 @@ class BuildingDetector(nn.Module):
         self.jloc_head = self._make_conv(dim_in, dim_in, dim_in)
         self.afm_head = self._make_conv(dim_in, dim_in, dim_in)
 
-        self.a2m_att = FCA(dim_in)
-        self.a2j_att = FCA(dim_in)
+        self.a2m_att = ECA(dim_in)
+        self.a2j_att = ECA(dim_in)
 
         self.mask_predictor = self._make_predictor(dim_in, 2)
         self.jloc_predictor = self._make_predictor(dim_in, 3)
