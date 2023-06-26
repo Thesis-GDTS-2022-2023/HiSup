@@ -8,27 +8,35 @@ class DatasetCatalog(object):
     
     DATASETS = {
         'vietnam_osm_train': {
-            'img_dir': '/home/ubuntu/Documents/data/osm_vietnam/imgs',
-            'ann_file': '/home/ubuntu/Documents/data/osm_vietnam/labels/coco/train.json'
+            'img_dir': '/home/ubuntu/Documents/data/osm_vietnam/target/imgs',
+            'ann_file': '/home/ubuntu/Documents/data/osm_vietnam/target/labels/coco/merge-train.json'
         },
         'vietnam_osm_val': {
-            'img_dir': '/home/ubuntu/Documents/data/osm_vietnam/imgs',
-            'ann_file': '/home/ubuntu/Documents/data/osm_vietnam/labels/coco/val.json'
+            'img_dir': '/home/ubuntu/Documents/data/osm_vietnam/target/imgs',
+            'ann_file': '/home/ubuntu/Documents/data/osm_vietnam/target/labels/coco/merge-val.json'
+        },
+        'vietnam_osm_test': {
+            'img_dir': '/home/ubuntu/Documents/data/osm_vietnam/target/imgs',
+            'ann_file': '/home/ubuntu/Documents/data/osm_vietnam/target/labels/coco/test.json'
         },
         'crowdai_train_small': {
-            'img_dir': '/home/ubuntu/Documents/data/crowdai/train/images',
-            'ann_file': '/home/ubuntu/Documents/data/crowdai/train/annotation-small.json'
+            'img_dir': '/home/ubuntu/Documents/data/crowdai/train/imgs',
+            'ann_file': '/home/ubuntu/Documents/data/crowdai/train/merge-train.json'#annotation-small.json'
+        },
+        'crowdai_val_small': {
+            'img_dir': '/home/ubuntu/Documents/data/crowdai/val/imgs',
+            'ann_file': '/home/ubuntu/Documents/data/crowdai/val/merge-val.json'#annotation-small.json'
         },
         'crowdai_test_small': {
-            'img_dir': '/home/ubuntu/Documents/data/crowdai/val/images',
+            'img_dir': '/home/ubuntu/Documents/data/crowdai/val/imgs',
             'ann_file': '/home/ubuntu/Documents/data/crowdai/val/annotation-small.json'
         },
         'crowdai_train': {
-            'img_dir': '/home/ubuntu/Documents/data/crowdai/train/images',
+            'img_dir': '/home/ubuntu/Documents/data/crowdai/train/imgs',
             'ann_file': '/home/ubuntu/Documents/data/crowdai/train/annotation.json'
         },
         'crowdai_test': {
-            'img_dir': '/home/ubuntu/Documents/data/crowdai/val/images',
+            'img_dir': '/home/ubuntu/Documents/data/crowdai/val/imgs',
             'ann_file': '/home/ubuntu/Documents/data/crowdai/val/annotation.json'
         },
         'inria_train': {

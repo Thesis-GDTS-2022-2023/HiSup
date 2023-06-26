@@ -41,7 +41,7 @@ def poly_to_bbox(poly):
 
 def generate_coco_ann(polys, scores, img_id):
     sample_ann = []
-    for i, polygon in enumerate(polys):
+    for i, polygon in enumerate(polys[0]):
         if polygon.shape[0] < 3:
             continue
 
@@ -49,10 +49,10 @@ def generate_coco_ann(polys, scores, img_id):
         poly_bbox = poly_to_bbox(polygon)
         ann_per_building = {
                 'image_id': img_id,
-                'category_id': 100,
+                'category_id': 0,
                 'segmentation': [vec_poly],
                 'bbox': poly_bbox,
-                'score': float(scores[i]),
+                'score': float(scores[0][i]),
             }
         sample_ann.append(ann_per_building)
 
@@ -60,18 +60,18 @@ def generate_coco_ann(polys, scores, img_id):
 
 def generate_coco_mask(mask, img_id):
     sample_ann = []
-    props = regionprops(label(mask > 0.50))
+    props = regionprops(label(mask[0] > 0.50))
     for prop in props:
         if ((prop.bbox[2] - prop.bbox[0]) > 0) & ((prop.bbox[3] - prop.bbox[1]) > 0):
-            prop_mask = np.zeros_like(mask, dtype=np.uint8)
+            prop_mask = np.zeros_like(mask[0], dtype=np.uint8)
             prop_mask[prop.coords[:, 0], prop.coords[:, 1]] = 1
 
-            masked_instance = np.ma.masked_array(mask, mask=(prop_mask != 1))
+            masked_instance = np.ma.masked_array(mask[0], mask=(prop_mask != 1))
             score = masked_instance.mean()
             encoded_region = coco_mask.encode(np.asfortranarray(prop_mask))
             ann_per_building = {
                 'image_id': img_id,
-                'category_id': 100,
+                'category_id': 0,
                 'segmentation': {
                     "size": encoded_region["size"],
                     "counts": encoded_region["counts"].decode()
@@ -110,9 +110,7 @@ class TestPipeline():
         batch_masks = output['mask_pred']
 
         for b in range(batch_size):
-            filename = anns[b]['filename']
-
-            img_id = int(filename[:-4])
+            img_id = anns[b]['id']
 
             scores = batch_scores[b]
             polys = batch_polygons[b]
@@ -149,7 +147,9 @@ class TestPipeline():
         aux_results = []
         aux_mask_results = []
         test_dataset, tar_gt_file, aux_ft_file = build_test_dataset(self.cfg)
-        for i, (imgs_tar, anns_tar,imgs_aux,anns_aux) in enumerate(tqdm(test_dataset)):
+        for i, (images, annotations) in enumerate(tqdm(test_dataset)):
+            imgs_tar, imgs_aux = images
+            anns_tar, anns_aux = [ann[0] for ann in annotations], [ann[1] for ann in annotations]
             
             with torch.no_grad():
                 output, _ = model(imgs_tar.to(self.device), imgs_aux.to(self.device),to_device(anns_tar, self.device),to_device(anns_aux, self.device))

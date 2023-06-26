@@ -19,19 +19,19 @@ def affine_transform(pt, t):
 
 
 class TrainDataset(Dataset):
-    def __init__(self, root_a, ann_file_a,root_b, ann_file_b, csv_file, transform=None, rotate_f=None):
+    def __init__(self, root_t, ann_file_t,root_a, ann_file_a, csv_file, transform=None, rotate_f=None):
+        self.root_t = root_t
         self.root_a = root_a
-        self.root_b = root_b
+
+        self.coco_t = COCO(ann_file_t)
+        images_id_t = self.coco_t.getImgIds()
+        self.images_t=images_id_t.copy()
 
         self.coco_a = COCO(ann_file_a)
         images_id_a = self.coco_a.getImgIds()
         self.images_a=images_id_a.copy()
 
-        self.coco_b = COCO(ann_file_b)
-        images_id_b = self.coco_b.getImgIds()
-        self.images_b=images_id_b.copy()
-
-        self.num_samples = len(self.images_a)
+        self.num_samples = len(self.images_t)
 
         self.transform = transform
         self.rotate_f = rotate_f
@@ -178,13 +178,13 @@ class TrainDataset(Dataset):
 
 
     def __getitem__(self, idx_):
-        image_tar, annotation_tar = self.get_single(self.pairs['target'][idx_],self.images_a,self.coco_a,self.root_a)
-        image_aux, annotation_aux = self.get_single(self.pairs['auxiliary'][idx_],self.images_b,self.coco_b,self.root_b)
+        image_tar, annotation_tar = self.get_single(self.pairs['target'][idx_],self.images_t,self.coco_t,self.root_t)
+        image_aux, annotation_aux = self.get_single(self.pairs['auxiliary'][idx_],self.images_a,self.coco_a,self.root_a)
         return (image_tar, image_aux), (annotation_tar, annotation_aux)
 
 
     def __len__(self):
-        return self.num_samples
+        return self.pairs.shape[0]
 
 
 def collate_fn(batch):

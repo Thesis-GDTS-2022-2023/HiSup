@@ -252,8 +252,8 @@ class BuildingDetector(nn.Module):
 
         en_features_a, en_features_b = self.cross(features_a, features_b)
 
-        output_a = self.baseline(outputs_a, en_features_a)
-        output_b = self.baseline(outputs_b, en_features_b)
+        output_a = self.baseline(None, outputs_a, en_features_a)
+        output_b = self.baseline(None, outputs_b, en_features_b)
 
         output = {}
         for key in output_a.keys():

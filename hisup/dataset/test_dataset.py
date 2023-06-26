@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os.path as osp
 import torchvision.datasets as dset
+from torch.utils.data import Dataset
 
 from PIL import Image
 from pycocotools.coco import COCO
@@ -9,109 +10,26 @@ from shapely.geometry import Polygon
 from torch.utils.data.dataloader import default_collate
 import pandas as pd
 
+from hisup.dataset.test_dataset_ import TestDatasetWithAnnotations as TestSetWithAnnotations
 
 
-class TestDatasetWithAnnotations(dset.coco.CocoDetection):
-    def __init__(self, root_a, ann_file_a,root_b, ann_file_b, csv_file, transform = None):
-        super(TestDatasetWithAnnotations, self).__init__(root_a, ann_file_a,root_b, ann_file_b, csv_file)
-
-        self.root_a = root_a
-        self.root_b = root_b
-
-        self.ids = sorted(self.ids)
-        self.id_to_img_map = {k:v for k, v in enumerate(self.ids)}
-        self._transforms = transform
+class TestDatasetWithAnnotations(Dataset):
+    def __init__(self, root_t, ann_file_t,root_a, ann_file_a, csv_file, transform = None):
+        # super(TestDatasetWithAnnotations, self).__init__(root_t, ann_file_t,root_a, ann_file_a, csv_file)
+        self.tar_set = TestSetWithAnnotations(root_t, ann_file_t, transform)
+        self.aux_set = TestSetWithAnnotations(root_a, ann_file_a, transform)
 
         self.pairs = pd.read_csv(csv_file)
 
+        self.collate_fn = TestSetWithAnnotations.collate_fn
+
     
     def __getitem__(self, idx):
-        img_tar, ann_tar = super(TestDatasetWithAnnotations, self).__getitem__(self.pairs['target'][idx])
-        img_aux, ann_aux = super(TestDatasetWithAnnotations, self).__getitem__(self.pairs['auxiliary'][idx])
+        img_tar, ann_tar = self.tar_set.__getitem__(self.pairs['target'][idx])
+        img_aux, ann_aux = self.aux_set.__getitem__(self.pairs['auxiliary'][idx])
 
-        image_tar, annotation_tar = self.load_single(img_tar, ann_tar)
-        image_aux, annotation_aux = self.load_single(img_aux, ann_aux)
-
-        return image_tar,annotation_tar,image_aux, annotation_aux
-        
+        return (img_tar, img_aux), (ann_tar, ann_aux)
     
-    def load_single(self,idx,img,annos):
-        image = np.array(img).astype(float)
-        img_info = self.get_img_info(idx)
-        width, height = img_info['width'], img_info['height']
 
-        ann = {
-            'filename': img_info['file_name'],
-            'width': width,
-            'height': height,
-            'junctions': [],
-            'juncs_tag': [],
-            'juncs_index': [],
-            'segmentations': [],
-            'bbox': [],
-        }
-
-        pid = 0
-        instance_id = 0
-        seg_mask = np.zeros([width, height])
-        for ann_per_ins in annos:
-            juncs, tags = [], []
-            segmentations = ann_per_ins['segmentation']
-            for i, segm in enumerate(segmentations):
-                segm = np.array(segm).reshape(-1, 2) # the shape of the segm is (N,2)
-                segm[:, 0] = np.clip(segm[:, 0], 0, width - 1e-4)
-                segm[:, 1] = np.clip(segm[:, 1], 0, height - 1e-4)
-                points = segm[:-1]
-                junc_tags = np.ones(points.shape[0])
-                if i == 0:  # outline
-                    poly = Polygon(points)
-                    if poly.area > 0:
-                        convex_point = np.array(poly.convex_hull.exterior.coords)
-                        convex_index = [(p == convex_point).all(1).any() for p in points]
-                        juncs.extend(points.tolist())
-                        junc_tags[convex_index] = 2    # convex point label
-                        tags.extend(junc_tags.tolist())
-                        ann['bbox'].append(list(poly.bounds))
-                        seg_mask += self.coco.annToMask(ann_per_ins)
-                else:
-                    juncs.extend(points.tolist())
-                    tags.extend(junc_tags.tolist())
-                    interior_contour = segm.reshape(-1, 1, 2)
-                    cv2.drawContours(seg_mask, [np.int0(interior_contour)], -1, color=0, thickness=-1)
-
-            ann['junctions'].extend(juncs)
-            ann['juncs_index'].extend([instance_id] * len(juncs))
-            ann['juncs_tag'].extend(tags)
-            if len(juncs) > 0:
-                instance_id += 1
-                pid += len(juncs)
-
-        ann['mask'] = np.clip(seg_mask, 0, 1)
-        
-        for key,_type in (['junctions',np.float32],
-                          ['juncs_tag',np.long],
-                          ['juncs_index', np.long],
-                          ['bbox', np.float32]):
-            ann[key] = np.array(ann[key],dtype=_type)
-
-
-        if self._transforms is not None:
-            return self._transforms(image, ann)
-        return image, ann
-
-    def image(self, idx):
-        img_id = self.id_to_img_map[idx]
-        file_name = self.coco.loadImgs(ids=[img_id])[0]['file_name']
-        image = Image.open(osp.join(self.root,file_name)).convert('RGB')
-        return image
-    
-    def get_img_info(self, index):
-        img_id = self.id_to_img_map[index]
-        img_data = self.coco.imgs[img_id]
-        return img_data
-
-    @staticmethod
-    def collate_fn(batch):
-        return (default_collate([b[0] for b in batch]),
-                [b[1] for b in batch])
-    
+    def __len__(self):
+        return self.pairs.shape[0]

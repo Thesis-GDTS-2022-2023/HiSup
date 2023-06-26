@@ -9,6 +9,8 @@ from hisup.utils.polygon import generate_polygon
 from hisup.utils.polygon import get_pred_junctions
 from skimage.measure import label, regionprops
 
+from hisup.attention.fca import MultiSpectralAttentionLayer as FCA
+
 
 def cross_entropy_loss_for_junction(logits, positive):
     nlogp = -F.log_softmax(logits, dim=1)

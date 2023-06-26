@@ -46,7 +46,8 @@ def generate_coco_ann(polys, scores, img_id):
         poly_bbox = poly_to_bbox(polygon)
         ann_per_building = {
                 'image_id': img_id,
-                'category_id': 100,
+                # 'category_id': 100,
+                'category_id': 0,
                 'segmentation': [vec_poly],
                 'bbox': poly_bbox,
                 'score': float(scores[i]),
@@ -68,7 +69,8 @@ def generate_coco_mask(mask, img_id):
             encoded_region = coco_mask.encode(np.asfortranarray(prop_mask))
             ann_per_building = {
                 'image_id': img_id,
-                'category_id': 100,
+                # 'category_id': 100,
+                'category_id': 0,
                 'segmentation': {
                     "size": encoded_region["size"],
                     "counts": encoded_region["counts"].decode()
@@ -97,6 +99,8 @@ class TestPipeline():
             self.test_on_crowdai(model, self.dataset_name)
         elif 'inria' in self.dataset_name:
             self.test_on_inria(model, self.dataset_name)
+        elif 'osm' in self.dataset_name:
+            self.test_on_osmvn(model, self.dataset_name)
 
     def eval(self):
         logger = logging.getLogger("testing")
@@ -107,6 +111,67 @@ class TestPipeline():
             boundary_eval(self.gt_file, self.dt_file)
         elif self.eval_type == 'polis':
             polis_eval(self.gt_file, self.dt_file)
+
+    def test_on_osmvn(self, model, dataset_name):
+        logger = logging.getLogger("testing")
+        logger.info('Testing on {} dataset'.format(dataset_name))
+        
+        results = []
+        mask_results = []
+        test_dataset, gt_file = build_test_dataset(self.cfg)
+        for i, (images, annotations) in enumerate(tqdm(test_dataset)):
+            
+            with torch.no_grad():
+                output, _ = model(images.to(self.device), to_device(annotations, self.device))
+                output = to_device(output,'cpu')
+
+            batch_size = images.size(0)
+            batch_scores = output['scores']
+            batch_polygons = output['polys_pred']
+            batch_masks = output['mask_pred']
+            
+
+            # if(self.count == 0):
+            #     print(output['juncs_pred'][0][0])
+            #     # print(len(output['polys_pred'][0]))
+            self.count += 1
+
+            for b in range(batch_size):
+                img_id = annotations[b]['id']
+
+                scores = batch_scores[b]
+                polys = batch_polygons[b]
+                mask_pred = batch_masks[b]
+                # print(mask_pred.shape)
+
+                image_result = generate_coco_ann(polys, scores, img_id)
+                if len(image_result) != 0:
+                    results.extend(image_result)
+
+                image_masks = generate_coco_mask(mask_pred, img_id)
+                if len(image_masks) != 0:
+                    mask_results.extend(image_masks)
+        
+        dt_file = osp.join(self.output_dir,'{}.json'.format(dataset_name))
+        logger.info('Writing the results of the {} dataset into {}'.format(dataset_name,
+                    dt_file))
+        with open(dt_file,'w') as _out:
+            json.dump(results,_out)
+
+        self.gt_file = gt_file
+        self.dt_file = dt_file
+        self.eval()
+
+        dt_file = osp.join(self.output_dir,'{}_mask.json'.format(dataset_name))
+        logger.info('Writing the results of the {} dataset into {}'.format(dataset_name,
+                    dt_file))
+        with open(dt_file,'w') as _out:
+            json.dump(mask_results,_out)
+
+        self.gt_file = gt_file
+        self.dt_file = dt_file
+        self.eval()
+
 
     def test_on_crowdai(self, model, dataset_name):
         logger = logging.getLogger("testing")
@@ -173,7 +238,7 @@ class TestPipeline():
         logger = logging.getLogger("testing")
         logger.info('Testing on {} dataset'.format(dataset_name))
 
-        IM_PATH = '../data/inria/raw/demo/images/'
+        IM_PATH = '../data/inria/raw/demo/imgs/'
         if not os.path.exists(os.path.join(self.output_dir, 'seg')):
             os.makedirs(os.path.join(self.output_dir, 'seg'))
         transform = build_transform(self.cfg)

@@ -291,7 +291,7 @@ def affine_transform(pt, t):
 
 
 if __name__ == '__main__':
-    input_image_path = '../data/inria/raw/train/images/'
+    input_image_path = '../data/inria/raw/train/imgs/'
     input_gt_path = '../data/inria/raw/train/gt/'
     save_path = '../data/inria/train/'
 

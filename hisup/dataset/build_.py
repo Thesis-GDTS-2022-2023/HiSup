@@ -40,9 +40,9 @@ def build_train_dataset(cfg):
     args['rotate_f'] = cfg.DATASETS.ROTATE_F
     dataset = factory(**args)
 
-    image, ann = dataset[0]
-    print("image size:", image.shape)
-    print("ann size:", len(ann))
+    # image, ann = dataset[0]
+    # print("image size:", image.shape)
+    # print("ann size:", len(ann))
 
     dataset = DataLoader(dataset,
                         batch_size=cfg.SOLVER.IMS_PER_BATCH,
